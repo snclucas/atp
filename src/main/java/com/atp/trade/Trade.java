@@ -54,18 +54,39 @@ public class Trade implements UniquelyIdentifiable {
 	protected double tradeValue;
 	private String uniqueID;
 
+	private double takeProfitPrice;
+  private double stopLossPrice;
 
-	public Trade(Security security, TradeSetup tradeSetup, LocalDateTime dateTime){
+
+	public Trade(Security security, TradeSetup tradeSetup, double takeProfitPrice, double stopLossPrice, LocalDateTime dateTime){
 		this.security = security;
 		this.tradeSetup = tradeSetup;
 		this.dateTime = dateTime;
 		this.status = TradeStatus.INACTIVE;
+		this.takeProfitPrice = takeProfitPrice;
+		this.stopLossPrice = stopLossPrice;
+
 		this.uniqueID = UUID.randomUUID().toString();
 	}
 
 
+  public double getTakeProfitPrice() {
+    return takeProfitPrice;
+  }
 
-	public Security getSecurity() {
+  public void setTakeProfitPrice(double takeProfitPrice) {
+    this.takeProfitPrice = takeProfitPrice;
+  }
+
+  public double getStopLossPrice() {
+    return stopLossPrice;
+  }
+
+  public void setStopLossPrice(double stopLossPrice) {
+    this.stopLossPrice = stopLossPrice;
+  }
+
+  public Security getSecurity() {
 		return security;
 	}
 

@@ -2,10 +2,10 @@ package com.atp.securities;
 
 
 public abstract class AbstractSecurity implements Security {
+
+	private String symbol;
 	
-	protected String symbol;
-	
-	public AbstractSecurity(String symbol) {
+  AbstractSecurity(String symbol) {
 		this.symbol = symbol;
 	}
 	
@@ -14,7 +14,11 @@ public abstract class AbstractSecurity implements Security {
 		return this.symbol;
 	}
 
-	
+
+	@Override
+	public String getSecurityId() {
+		return Integer.toString((symbol.toLowerCase().hashCode() + this.getClass().hashCode()));
+	}
 	
 
 	@Override

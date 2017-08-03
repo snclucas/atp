@@ -1,7 +1,9 @@
 package com.atp.securities;
 
 
-public interface Security {
+import com.atp.UniquelyIdentifiable;
+
+public interface Security{
 	
 	public enum SecurityType { 
 		STOCK("Stock"), BOND("Bond"), OPTION("Option");
@@ -9,7 +11,8 @@ public interface Security {
 		SecurityType(String tag) { this.tag = tag;}
 		public String getTag() { return tag; }
 	};
-	
+
+	String getSecurityId();
 	SecurityType getType();
 	String getSymbol();
 	double getPayoff(double currentMarketPrice);

@@ -25,7 +25,5 @@ public class Stock extends AbstractSecurity {
 	public SecurityType getType() {
 		return SecurityType.STOCK;
 	}
-	
-	
 
 }

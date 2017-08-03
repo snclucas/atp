@@ -165,12 +165,15 @@ public class Portfolio implements MessageWriter {
 	}
 	
 	
-	public boolean addPosition(Position position) {
-		if(!positions.containsKey(position.getUniqueID())) {
-			positions.put(position.getUniqueID(), position);
-			return true;
+	public void addToPosition(Trade trade) {
+		if(!positions.containsKey(trade.getSecurity().getSecurityId())) {
+			positions.put(trade.getSecurity().getSecurityId(), new Position(trade));
 		}
-		return false;
+		else {
+			Position position = positions.get(trade.getSecurity().getSecurityId());
+			position.addTrade(trade);
+			//Does this update the position in the map?
+		}
 	}
 
 	

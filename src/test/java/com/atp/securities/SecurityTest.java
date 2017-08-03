@@ -35,4 +35,10 @@ public class SecurityTest extends TestCase {
 	}
 
 
+	public void testSecurityId() {
+
+		Stock stock = new Stock("msft", 0.0);
+
+	}
+
 }

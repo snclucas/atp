@@ -107,9 +107,8 @@ public class TradeManager {
 
 
 		if((buyOrSell == TradeType.BUY || buyOrSell == TradeType.SELL_SHORT) && trade.getAction() == TradeAction.TO_OPEN) {
-			portfolio.addPosition(new Position(trade));
+			portfolio.addToPosition(trade);
 			tradeValue = trade.getTradeCost()-commission;
-			
 		}
 
 		
@@ -131,7 +130,7 @@ public class TradeManager {
 		
 		
 		if(buyOrSell == TradeType.SELL_SHORT && trade.getAction() == TradeAction.TO_OPEN) {
-			portfolio.addPosition(new Position(trade));
+			portfolio.addToPosition(trade);
 			tradeValue = trade.getTradeCost()-commission;
 			totalCommissionsPaid =+ commission;
 		}
@@ -174,28 +173,20 @@ public class TradeManager {
 
 		for(Position position : portfolio.getPositionsWithSymbol(priceBar.getSymbol())) {
 			
-			int holdingPeriod = ChronoUnit.DAYS.between(position.getTradeDate().toDateMidnight(), 
-					priceBar.getDateTime().toDateMidnight()  ).getDays() ;
+			long holdingPeriod = ChronoUnit.DAYS.between(
+			        position.getOpenPositionDate(),
+              priceBar.getDateTime());
 			
 			if(holdingPeriod >= tradingScheme.getMaxHoldingPeriod()) {
-				Trade trade = position.getTrade().getCloseOutTrade(priceBar, true, TradeAction.HOLDING_PERIOD);
-				
-				if(priceBar.getHigh() >= position.getTrade().getPrice()) {
-					trade.setAction(TradeAction.HOLDING_PERIOD);
-					trade.setStatus(TradeStatus.CLOSED);
-				}
-				else {
-					trade.setAction(TradeAction.HOLDING_PERIOD);
-					trade.setStatus(TradeStatus.CLOSED);
-				}
-				
-				
-				
-				execute(trade, priceBar.getDateTime());
-			}
-			
-		
-			if(longOrShort == TradeSide.LONG) {
+        Trade trade = position.getCloseOutTrade();
+        execute(trade, priceBar.getDateTime());
+        return;
+      }
+
+
+
+
+			if(position.isLong()) {
 
 				if(priceBar.getHigh()>=position.getTrade().getTakeProfitPrice()) {	
 					Trade t = position.getTrade().getCloseOutTrade(priceBar, true, TradeAction.TAKE_PROFIT);

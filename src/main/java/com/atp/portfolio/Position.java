@@ -2,9 +2,7 @@ package com.atp.portfolio;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.atp.UniquelyIdentifiable;
@@ -13,38 +11,41 @@ import com.atp.logging.Message.MessageType;
 import com.atp.securities.Security;
 import com.atp.trade.Trade;
 import com.atp.trade.Trade.TradeAction;
+import com.atp.trade.TradeSetup;
 
 public class Position implements UniquelyIdentifiable {
-	
-	private Map<String, LimitOrder> limitOrders;
+
 	private List<Trade> trades;
 	private double amount;
 	private String symbol;
 	private Security security;
 	private String ID;
 
+  private double takeProfitPrice;
+  private double stopLossPrice;
+
+	private LocalDateTime openPositionDate;
+
 	
 	public Position(Trade trade) {
 		super();
 		this.ID = UUID.randomUUID().toString();
-		this.trades = new ArrayList<Trade>();
+		this.trades = new ArrayList<>();
 		this.symbol = trade.getSecurity().getSymbol();
 		this.security = trade.getSecurity();
-		this.limitOrders = new HashMap<String, LimitOrder>();
+		this.openPositionDate = LocalDateTime.now();
 		addTrade(trade);
 	}
-	
-	
-	public Position(Trade trade, Map<String, LimitOrder> limitOrders) {
-		this(trade);
-		this.limitOrders = limitOrders;
-	}
-	
+
 	
 	public String getUniqueID() {
 		return ID;
 	}
-	
+
+
+	public boolean isLong(){
+	  return amount > 0;
+  }
 	
 	public Message addTrade(Trade trade) {
 		if(!trade.getSecurity().equals(this.security)) {
@@ -60,24 +61,8 @@ public class Position implements UniquelyIdentifiable {
 							" security type to existing " + 
 				this.security.getType() + " / " + security.getSymbol() + "  position");
 	}
-	
-	
-	
-	public LimitOrder addLimitOrder(String limitOrderName, LimitOrder limitOrder) {
-		return limitOrders.put(limitOrderName, limitOrder);
-	}
-	
-	
-	public LimitOrder addStopLossLimitOrder(LimitOrder limitOrder) {
-		return limitOrders.put(TradeAction.STOP_LOSS.getTag(), limitOrder);
-	}
-	
-	
-	public LimitOrder addTakeProfitLimitOrder(LimitOrder limitOrder) {
-		return limitOrders.put(TradeAction.TAKE_PROFIT.getTag(), limitOrder);
-	}
 
-	
+
 	public double getCurrentValueOfPosition(double currentMarketPrice) {
 		double currentValue = 0.0;
 		for(Trade trade : trades)
@@ -98,7 +83,7 @@ public class Position implements UniquelyIdentifiable {
 	//Delegate methods
 
 	public String[] getTradeIDs() {
-		List<String> tradeIDs = new ArrayList<String>();
+		List<String> tradeIDs = new ArrayList<>();
 		for(Trade trade : trades)
 			tradeIDs.add(trade.getId());
 		return tradeIDs.toArray(new String[tradeIDs.size()]);
@@ -109,8 +94,11 @@ public class Position implements UniquelyIdentifiable {
 	}
 
 
+  public LocalDateTime getOpenPositionDate() {
+    return openPositionDate;
+  }
 
-	public LocalDateTime[] getTradeDates() {
+  public LocalDateTime[] getTradeDates() {
 		List<LocalDateTime> tradeIDs = new ArrayList<LocalDateTime>();
 		for(Trade trade : trades)
 			tradeIDs.add(trade.getDate());
@@ -122,6 +110,15 @@ public class Position implements UniquelyIdentifiable {
 		return trades;
 	}
 
+
+	public Trade getCloseOutTrade() {
+	  TradeSetup tradeSetup;
+	  if(amount > 0)
+      tradeSetup = new TradeSetup(amount, Trade.TradeType.SELL, TradeAction.TO_CLOSE);
+	  else
+      tradeSetup = new TradeSetup(amount, Trade.TradeType.BUY, TradeAction.TO_CLOSE);
+	  return new Trade(getSecurity(),tradeSetup, -1, -1,  LocalDateTime.now());
+  }
 	
 	//Bookeeping utility methods
 
@@ -150,6 +147,23 @@ public class Position implements UniquelyIdentifiable {
 			return false;
 		return true;
 	}
+
+
+  public double getTakeProfitPrice() {
+    return takeProfitPrice;
+  }
+
+  public void setTakeProfitPrice(double takeProfitPrice) {
+    this.takeProfitPrice = takeProfitPrice;
+  }
+
+  public double getStopLossPrice() {
+    return stopLossPrice;
+  }
+
+  public void setStopLossPrice(double stopLossPrice) {
+    this.stopLossPrice = stopLossPrice;
+  }
 
 	
 
