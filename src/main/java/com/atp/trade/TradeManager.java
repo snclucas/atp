@@ -184,20 +184,16 @@ public class TradeManager {
       }
 
 
-
-
 			if(position.isLong()) {
 
-				if(priceBar.getHigh()>=position.getTrade().getTakeProfitPrice()) {	
-					Trade t = position.getTrade().getCloseOutTrade(priceBar, true, TradeAction.TAKE_PROFIT);
+				if(priceBar.getHigh()>=position.getTakeProfitPrice()) {
+					Trade t = position.getCloseOutTrade();
 
-					t.setAction(TradeAction.TAKE_PROFIT);
 					t.setStatus(TradeStatus.CLOSED);
 					execute(t, priceBar.getDateTime());
 				}
-				else if(priceBar.getLow()<=position.getTrade().getStopLossPrice()) {	
-					Trade trade = position.getTrade().getCloseOutTrade(priceBar, true, TradeAction.STOP_LOSS);
-					trade.setAction(TradeAction.STOP_LOSS);
+				else if(priceBar.getLow()<=position.getStopLossPrice()) {
+					Trade trade = position.getCloseOutTrade();
 					trade.setStatus(TradeStatus.CLOSED);
 					execute(trade, priceBar.getDateTime());
 				}
@@ -205,21 +201,19 @@ public class TradeManager {
 			}
 			else {
 
-				if(priceBar.getLow()<=position.getTrade().getTakeProfitPrice()) {
+				if(priceBar.getLow()<=position.getTakeProfitPrice()) {
 					//System.out.println("take profit");
 
-					Trade trade = position.getTrade().getCloseOutTrade(priceBar, true, TradeAction.TAKE_PROFIT);
+					Trade trade = position.getCloseOutTrade();
 				//	System.err.println(position.getTrade().getId());
 
 				//	System.err.println(t.getId());
-					trade.setAction(TradeAction.TAKE_PROFIT);
 					trade.setStatus(TradeStatus.CLOSED);
 					execute(trade, priceBar.getDateTime());
 				}
-				else if(priceBar.getHigh()>=position.getTrade().getStopLossPrice()) {
+				else if(priceBar.getHigh()>=position.getStopLossPrice()) {
 				//	System.out.println("stop loss");
-					Trade trade = position.getTrade().getCloseOutTrade(priceBar, true, TradeAction.STOP_LOSS);
-					trade.setAction(TradeAction.STOP_LOSS);
+					Trade trade = position.getCloseOutTrade();
 					trade.setStatus(TradeStatus.CLOSED);
 					execute(trade, priceBar.getDateTime());
 				}

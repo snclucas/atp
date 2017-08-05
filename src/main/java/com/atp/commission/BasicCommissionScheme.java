@@ -30,7 +30,8 @@ public class BasicCommissionScheme implements CommissionScheme {
 
 	@Override
 	public double getCommission(TradeSetup tradeSetup) {
-		if(TradeType.BUY == tradeSetup.getTradeType()) return getBuyCommission();
+		if(TradeType.BUY.equals(tradeSetup.getTradeType().getTag()))
+			return getBuyCommission();
 		return getSellCommission();
 	}
 	

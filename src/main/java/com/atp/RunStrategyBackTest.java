@@ -29,7 +29,7 @@ public class RunStrategyBackTest implements Observer{
 
 		int initialCash = 10000;
 		int allowedTrades = 1;
-		Portfolio portfolio = new Portfolio("Simple com.atp.com.atp.portfolio", initialCash, allowedTrades);
+		Portfolio portfolio = new Portfolio("Simple com.atp.com.atp.portfolio", initialCash);
 		
 		CommissionScheme basicCommissionScheme = new BasicCommissionScheme(10, 10);
 

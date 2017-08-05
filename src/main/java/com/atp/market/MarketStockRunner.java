@@ -8,6 +8,8 @@ import java.util.List;
 import com.atp.data.PriceBar;
 import com.atp.data.io.PriceHistory;
 import com.atp.portfolio.Portfolio;
+import com.atp.securities.Security;
+import com.atp.securities.Stock;
 import com.atp.strategy.BollingerMedianStrategy;
 import com.atp.strategy.Strategy;
 import com.atp.trade.Trade;
@@ -64,9 +66,6 @@ public class MarketStockRunner {
 
 			for(int i=0;i<prices.size();i++) {
 				PriceBar currentBar = qh.getPriceBar(i);
-				
-			//	System.err.println("Current price is " + currentBar.getClose() + " " 
-			//			+ FormatUtil.shortDate(currentBar.getDate()) + " " + tm.getPortfolio().getNumPositions() );
 
 				strategy.tick(currentBar);
 				double indicator = currentBar.getPriceAction();
@@ -74,13 +73,15 @@ public class MarketStockRunner {
 				LocalDateTime date = prices.get(i).getDateTime();
 				double close = prices.get(i).getClose();
 
-				if(indicator>=1) {
+				if(indicator >= 1) {
 					if(tradeManager.canTrade()) {
 						
 						int numShares = (int)((portfolio.getCash()*tradeManager.getTradingScheme().getMaxCapitalPerTrade()) / close);
-						TradeSetup tradeSetup = new TradeSetup(qh.getSymbol(), close, numShares, TradeType.BUY, TradeSide.LONG);
-						Trade trade = new Trade(tradeSetup, 
-								TradeAction.TO_OPEN, date, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
+
+						TradeSetup tradeSetup = new TradeSetup(numShares, Trade.TradeType.BUY, TradeAction.TO_OPEN);
+
+						Trade trade = new Trade(new Stock(qh.getSymbol(), close),  tradeSetup, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit(), date);
+
 						TradeResult result = tradeManager.execute(trade, date);
 						
 						if(result.getStatus()!=TradeManager.SUCCSESFUL_TRADE)
@@ -88,14 +89,15 @@ public class MarketStockRunner {
 
 					}
 				}
-				else if(indicator <=-1 && tradeManager.getTradingScheme().isAllowShorts()) {
+				else if(indicator <=-1 && tradeManager.getTradingScheme().allowShortSelling()) {
 					if(tradeManager.canTrade()) {
 
 						int numShares = (int)((portfolio.getCash()*tradeManager.getTradingScheme().getMaxCapitalPerTrade()) / close);
-						TradeSetup tradeSetup = new TradeSetup(qh.getSymbol(), close, numShares, TradeType.SELL, TradeSide.SHORT);
-						
-						Trade trade = new StockTrade(tradeSetup, 
-								TradeAction.TO_OPEN, date, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
+
+						TradeSetup tradeSetup = new TradeSetup(numShares, Trade.TradeType.SELL, TradeAction.TO_OPEN);
+
+						Trade trade = new Trade(new Stock(qh.getSymbol(), close), tradeSetup, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit(), date);
+
 						TradeResult result = tradeManager.execute(trade, date);
 						
 						if(result.getStatus()!=TradeManager.SUCCSESFUL_TRADE)

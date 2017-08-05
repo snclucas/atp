@@ -57,6 +57,7 @@ public class PriceBar implements Comparable<PriceBar> {
 		return ret;
 	}
 
+
 	public void setRet(double ret) {
 		this.ret = ret;
 	}
@@ -109,13 +110,16 @@ public class PriceBar implements Comparable<PriceBar> {
 		this.dateTime = date;
 	}
 
+
 	public long getDateLong() {
 		return dateTime.getNano() / 1000000;
 	}
 
+
 	public double getVolume() {
 		return volume;
 	}
+
 
 	public void setVolume(double volume) {
 		this.volume = volume;
@@ -130,21 +134,26 @@ public class PriceBar implements Comparable<PriceBar> {
 		return BLACK;
 	}
 
+
 	public boolean isWhiteCandle() {
 		return (candleType() == WHITE);
 	}
+
 
 	public boolean isBlackCandle() {
 		return (candleType() == BLACK);
 	}
 
+
 	public double getHighLow() {
 		return (high - low);
 	}
 
+
 	public double getOpenClose() {
 		return Math.abs(open - close);
 	}
+
 
 	public double getUpperStick() {
 		if(open > close)
@@ -152,20 +161,22 @@ public class PriceBar implements Comparable<PriceBar> {
 		return high - close;
 	}
 
+
 	public double getLowerStick() {
 		if(open > close)
 			return close - low;
 		return open - low;
 	}
 
+
 	public String getSymbol() {
 		return symbol;
 	}
 
+
 	public void setSymbol(String symbol) {
 		this.symbol = symbol;
 	}
-
 
 
 	@Override

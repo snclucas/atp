@@ -9,8 +9,7 @@ public class TradeSetup {
 	private TradeAction tradeAction;
 	private double amount;
 	
-	public TradeSetup(double amount, TradeType tradeType,
-			TradeAction tradeAction) {
+	public TradeSetup(double amount, TradeType tradeType, TradeAction tradeAction) {
 		super();
 		this.tradeType = tradeType;
 		this.tradeAction = tradeAction;
@@ -18,17 +17,17 @@ public class TradeSetup {
 	}
 
 
-	TradeType getTradeType() {
+	public TradeType getTradeType() {
 		return tradeType;
 	}
-	
-	
-	TradeAction getTradeAction() {
+
+
+	public TradeAction getTradeAction() {
 		return tradeAction;
 	}
 
 
-	double getAmount() {
+	public double getAmount() {
 		return amount;
 	}
 	

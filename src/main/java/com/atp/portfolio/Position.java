@@ -13,6 +13,7 @@ import com.atp.trade.Trade;
 import com.atp.trade.Trade.TradeAction;
 import com.atp.trade.TradeSetup;
 
+
 public class Position implements UniquelyIdentifiable {
 
 	private List<Trade> trades;
@@ -46,6 +47,7 @@ public class Position implements UniquelyIdentifiable {
 	public boolean isLong(){
 	  return amount > 0;
   }
+
 	
 	public Message addTrade(Trade trade) {
 		if(!trade.getSecurity().equals(this.security)) {
@@ -98,11 +100,12 @@ public class Position implements UniquelyIdentifiable {
     return openPositionDate;
   }
 
-  public LocalDateTime[] getTradeDates() {
+
+  public List<LocalDateTime> getTradeDates() {
 		List<LocalDateTime> tradeIDs = new ArrayList<LocalDateTime>();
 		for(Trade trade : trades)
 			tradeIDs.add(trade.getDate());
-		return tradeIDs.toArray(new LocalDateTime[tradeIDs.size()]);
+		return tradeIDs;
 	}
 
 
@@ -119,7 +122,8 @@ public class Position implements UniquelyIdentifiable {
       tradeSetup = new TradeSetup(amount, Trade.TradeType.BUY, TradeAction.TO_CLOSE);
 	  return new Trade(getSecurity(),tradeSetup, -1, -1,  LocalDateTime.now());
   }
-	
+
+
 	//Bookeeping utility methods
 
 	@Override
@@ -153,13 +157,16 @@ public class Position implements UniquelyIdentifiable {
     return takeProfitPrice;
   }
 
+
   public void setTakeProfitPrice(double takeProfitPrice) {
     this.takeProfitPrice = takeProfitPrice;
   }
 
+
   public double getStopLossPrice() {
     return stopLossPrice;
   }
+
 
   public void setStopLossPrice(double stopLossPrice) {
     this.stopLossPrice = stopLossPrice;
@@ -168,34 +175,3 @@ public class Position implements UniquelyIdentifiable {
 	
 
 }
-
-
-/*
-public Trade getCloseOutTrade(PriceBar priceBar, boolean assumeTriggeredLimits, TradeAction action) {
-	TradeSide tradeSide = com.atp.com.atp.trade.getTradeSide();
-	TradeType tradeType = com.atp.com.atp.trade.getTradeType();
-	
-	TradeSide closeTradeSide = TradeSide.LONG;
-	TradeType closeTradeType = TradeType.BUY;
-	
-	if(tradeSide == TradeSide.LONG && tradeType == TradeType.BUY) {
-		closeTradeType = TradeType.SELL;
-		closeTradeSide = TradeSide.LONG;
-	}
-	
-	if(tradeSide == TradeSide.SHORT && tradeType == TradeType.SELL) {
-		closeTradeType = TradeType.BUY;
-		closeTradeSide = TradeSide.LONG;
-	}
-	
-	double price = (action==TradeAction.TAKE_PROFIT)?getTakeProfitPrice():getStopLossPrice();
-	
-	if(action == TradeAction.HOLDING_PERIOD) {
-		price = priceBar.getClose();
-	}
-
-	TradeSetup closeTradeSetup = new TradeSetup(getSymbol(), assumeTriggeredLimits?price:priceBar.getClose(), getAmount(), closeTradeType, closeTradeSide);
-	
-	return new Trade(closeTradeSetup, TradeAction.TO_CLOSE, priceBar.getDate(), 0, 0);
-}
-*/
