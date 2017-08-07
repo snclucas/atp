@@ -2,13 +2,13 @@ package com.atp.market;
 
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.atp.data.PriceBar;
 import com.atp.data.io.PriceHistory;
 import com.atp.portfolio.Portfolio;
-import com.atp.securities.Security;
 import com.atp.securities.Stock;
 import com.atp.strategy.BollingerMedianStrategy;
 import com.atp.strategy.Strategy;
@@ -17,8 +17,7 @@ import com.atp.trade.TradeManager;
 import com.atp.trade.TradeResult;
 import com.atp.trade.TradeSetup;
 import com.atp.trade.TradingScheme;
-import com.atp.trade.Trade.TradeAction;
-import com.atp.trade.Trade.TradeType;
+import com.atp.trade.Trade.Action;
 
 public class MarketStockRunner {
 
@@ -47,8 +46,7 @@ public class MarketStockRunner {
 
 
 	public void addPriceHistory(PriceHistory ... quoteHist) {
-		for(PriceHistory qh : quoteHist)
-			quoteHistories.add(qh);
+		quoteHistories.addAll(Arrays.asList(quoteHist));
 	}
 
 
@@ -68,7 +66,7 @@ public class MarketStockRunner {
 				PriceBar currentBar = qh.getPriceBar(i);
 
 				strategy.tick(currentBar);
-				double indicator = currentBar.getPriceAction();
+				double indicator = 1.0; // FIX!!! currentBar.getPriceAction();
 
 				LocalDateTime date = prices.get(i).getDateTime();
 				double close = prices.get(i).getClose();
@@ -78,7 +76,7 @@ public class MarketStockRunner {
 						
 						int numShares = (int)((portfolio.getCash()*tradeManager.getTradingScheme().getMaxCapitalPerTrade()) / close);
 
-						TradeSetup tradeSetup = new TradeSetup(numShares, Trade.TradeType.BUY, TradeAction.TO_OPEN);
+						TradeSetup tradeSetup = new TradeSetup(numShares, Trade.Type.BUY, Action.TO_OPEN);
 
 						Trade trade = new Trade(new Stock(qh.getSymbol(), close),  tradeSetup, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit(), date);
 
@@ -94,7 +92,7 @@ public class MarketStockRunner {
 
 						int numShares = (int)((portfolio.getCash()*tradeManager.getTradingScheme().getMaxCapitalPerTrade()) / close);
 
-						TradeSetup tradeSetup = new TradeSetup(numShares, Trade.TradeType.SELL, TradeAction.TO_OPEN);
+						TradeSetup tradeSetup = new TradeSetup(numShares, Trade.Type.SELL, Action.TO_OPEN);
 
 						Trade trade = new Trade(new Stock(qh.getSymbol(), close), tradeSetup, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit(), date);
 

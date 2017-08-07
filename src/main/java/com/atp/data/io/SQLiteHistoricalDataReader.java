@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,7 +56,9 @@ public class SQLiteHistoricalDataReader implements HistoricalDataReader, Histori
 				double high = rs.getDouble("high");
 				double low = rs.getDouble("low");
 				double volume = rs.getDouble("volume");
-				LocalDateTime dateTime = LocalDateTime(rs.getDate("date"));
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"); //TODO PROB WRONG!!!
+
+				LocalDateTime dateTime = LocalDateTime.parse(rs.getDate("date").toString(), formatter);
 				PriceBar priceBar = new PriceBar(symbol, dateTime, open, high, low, close, volume);
 				history.addPriceBar(priceBar);
 			}

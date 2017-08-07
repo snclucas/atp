@@ -1,15 +1,15 @@
 package com.atp.trade;
 
-import com.atp.trade.Trade.TradeAction;
-import com.atp.trade.Trade.TradeType;
+import com.atp.trade.Trade.Action;
+import com.atp.trade.Trade.Type;
 
 public class TradeSetup {
 	
-	private TradeType tradeType;
-	private TradeAction tradeAction;
+	private Trade.Type tradeType;
+	private Action tradeAction;
 	private double amount;
 	
-	public TradeSetup(double amount, TradeType tradeType, TradeAction tradeAction) {
+	public TradeSetup(double amount, Type tradeType, Action tradeAction) {
 		super();
 		this.tradeType = tradeType;
 		this.tradeAction = tradeAction;
@@ -17,12 +17,12 @@ public class TradeSetup {
 	}
 
 
-	public TradeType getTradeType() {
+	public Trade.Type getTradeType() {
 		return tradeType;
 	}
 
 
-	public TradeAction getTradeAction() {
+	public Action getTradeAction() {
 		return tradeAction;
 	}
 

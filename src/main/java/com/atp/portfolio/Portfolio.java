@@ -55,7 +55,7 @@ public class Portfolio implements MessageWriter {
 	}
 	
 	
-	public String getUniqueID() {
+	public String getId() {
 		return ID;
 	}
 	
@@ -152,16 +152,16 @@ public class Portfolio implements MessageWriter {
 				 position.addTrade(trade);
 				 cash += costOfTrade;
 				 return new Message(MessageType.SUCCESS, LocalDateTime.now(), 
-						 "Trade added to exisiting position [" + position.getUniqueID() + "]");
+						 "Trade added to exisiting position [" + position.getId() + "]");
 			}
 		}
 		
 		// We don't have a position in this security so create a new position
 		Position position = new Position(trade);
-		positions.put(position.getUniqueID(), position);
+		positions.put(position.getId(), position);
 		cash += costOfTrade;
 		return new Message(MessageType.SUCCESS, LocalDateTime.now(), 
-				 "Trade added to new position [" + position.getUniqueID() + "]");
+				 "Trade added to new position [" + position.getId() + "]");
 	}
 	
 	

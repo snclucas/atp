@@ -8,13 +8,13 @@ import com.atp.securities.Security;
 
 public class Trade implements UniquelyIdentifiable {
 
-	public enum TradeType { 
+	public enum Type {
 		BUY("Buy", -1), SELL("Sell", 1), SELL_SHORT("Sell short", 1); // Buying costs you money therefore -1
 
 		private String tag;
 		private int value;
 
-		TradeType(String tag, int value) { 
+		Type(String tag, int value) {
 			this.tag = tag; this.value = value; 
 		} 
 
@@ -29,30 +29,29 @@ public class Trade implements UniquelyIdentifiable {
 	};
 
 
-	public enum TradeAction { 
+	public enum Action {
 		TO_OPEN("To open"), TO_CLOSE("To close"), STOP_LOSS("Stop loss"), TAKE_PROFIT("Take profit"), HOLDING_PERIOD("Holding period"), ANY("Any");
 		private String tag;
-		TradeAction(String tag) { this.tag = tag;}
+		Action(String tag) { this.tag = tag;}
 		public String getTag() { return tag; }
 	};
 
 
-	public enum TradeStatus { 
+	public enum Status {
 		ACTIVE("Active"), SUCCESSFULL("Successful"), INACTIVE("Inactive"), CLOSED("Closed"), ANY("Any");
 		private String tag;
-		TradeStatus(String tag) { this.tag = tag;}
+		Status(String tag) { this.tag = tag;}
 		public String getTag() { return tag; }
 	};
 
 
 	private Security security;
-	private String id;
 	private TradeSetup tradeSetup;
-	private TradeStatus status;
+	private Status status;
 	private LocalDateTime dateTime;
 	private boolean active;
 	protected double tradeValue;
-	private String uniqueID;
+	private String id;
 
 	private double takeProfitPrice;
   private double stopLossPrice;
@@ -62,11 +61,10 @@ public class Trade implements UniquelyIdentifiable {
 		this.security = security;
 		this.tradeSetup = tradeSetup;
 		this.dateTime = dateTime;
-		this.status = TradeStatus.INACTIVE;
+		this.status = Status.INACTIVE;
 		this.takeProfitPrice = takeProfitPrice;
 		this.stopLossPrice = stopLossPrice;
-
-		this.uniqueID = UUID.randomUUID().toString();
+		this.id = UUID.randomUUID().toString();
 	}
 
 
@@ -74,17 +72,11 @@ public class Trade implements UniquelyIdentifiable {
     return takeProfitPrice;
   }
 
-  public void setTakeProfitPrice(double takeProfitPrice) {
-    this.takeProfitPrice = takeProfitPrice;
-  }
 
   public double getStopLossPrice() {
     return stopLossPrice;
   }
 
-  public void setStopLossPrice(double stopLossPrice) {
-    this.stopLossPrice = stopLossPrice;
-  }
 
   public Security getSecurity() {
 		return security;
@@ -96,9 +88,10 @@ public class Trade implements UniquelyIdentifiable {
 	}
 
 
-	public String getUniqueID() {
-		return uniqueID;
+	public String getId() {
+		return id;
 	}
+
 
 	public boolean isActive() {
 		return active;
@@ -110,17 +103,13 @@ public class Trade implements UniquelyIdentifiable {
 	}
 
 
-	public TradeStatus getStatus() {
+	public Status getStatus() {
 		return status;
 	}
 
-	public void setStatus(TradeStatus status) {
+
+	public void setStatus(Status status) {
 		this.status = status;
-	}
-
-
-	public String getId() {
-		return id;
 	}
 
 
@@ -129,7 +118,7 @@ public class Trade implements UniquelyIdentifiable {
 	}
 
 
-	public TradeAction getAction() {
+	public Action getAction() {
 		return tradeSetup.getTradeAction();
 	}
 
@@ -139,7 +128,7 @@ public class Trade implements UniquelyIdentifiable {
 
 	// Delegate methods
 
-	public TradeType getTradeType() {
+	public Type getTradeType() {
 		return tradeSetup.getTradeType();
 	}
 

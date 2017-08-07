@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.UUID;
 
 import com.atp.UniquelyIdentifiable;
+import com.atp.data.PriceBar;
 import com.atp.logging.Message;
 import com.atp.logging.Message.MessageType;
 import com.atp.securities.Security;
 import com.atp.trade.Trade;
-import com.atp.trade.Trade.TradeAction;
+import com.atp.trade.Trade.Action;
 import com.atp.trade.TradeSetup;
 
 
@@ -39,7 +40,7 @@ public class Position implements UniquelyIdentifiable {
 	}
 
 	
-	public String getUniqueID() {
+	public String getId() {
 		return ID;
 	}
 
@@ -117,9 +118,9 @@ public class Position implements UniquelyIdentifiable {
 	public Trade getCloseOutTrade() {
 	  TradeSetup tradeSetup;
 	  if(amount > 0)
-      tradeSetup = new TradeSetup(amount, Trade.TradeType.SELL, TradeAction.TO_CLOSE);
+      tradeSetup = new TradeSetup(amount, Trade.Type.BUY, Action.TO_CLOSE);
 	  else
-      tradeSetup = new TradeSetup(amount, Trade.TradeType.BUY, TradeAction.TO_CLOSE);
+      tradeSetup = new TradeSetup(amount, Trade.Type.SELL, Action.TO_CLOSE);
 	  return new Trade(getSecurity(),tradeSetup, -1, -1,  LocalDateTime.now());
   }
 

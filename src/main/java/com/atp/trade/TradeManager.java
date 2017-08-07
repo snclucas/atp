@@ -7,9 +7,9 @@ import java.util.*;
 import com.atp.data.PriceBar;
 import com.atp.portfolio.Portfolio;
 import com.atp.portfolio.Position;
-import com.atp.trade.Trade.TradeAction;
-import com.atp.trade.Trade.TradeStatus;
-import com.atp.trade.Trade.TradeType;
+import com.atp.trade.Trade.Action;
+import com.atp.trade.Trade.Status;
+import com.atp.trade.Trade.Type;
 import com.atp.util.FormatUtil;
 import com.atp.util.PropertiesUtil;
 
@@ -79,7 +79,7 @@ public class TradeManager {
 
 	public TradeResult execute(Trade trade, LocalDateTime executeDate) {
 		String executeDateStr = FormatUtil.shortDate(executeDate);
-		TradeType buyOrSell = trade.getTradeType();
+		Type buyOrSell = trade.getTradeType();
 
 		double commission = tradingScheme.getCommission(trade.getTradeSetup());
 
@@ -87,15 +87,15 @@ public class TradeManager {
 			return new TradeResult(CANNOT_SATISFY_TRADE_RULE, 0.0);
 
 		/* Buy a security */
-		if(buyOrSell == TradeType.BUY && 
+		if(buyOrSell == Type.BUY &&
 				portfolio.numPositions()>=tradingScheme.getNumberOfConcurrentPositions() && 
-				trade.getAction() == TradeAction.TO_OPEN) //change this - this could be closing out a short
+				trade.getAction() == Action.TO_OPEN) //change this - this could be closing out a short
 			return new TradeResult(NO_MORE_POSITIONS_ALLOWED,0.0);
 		
 		/* Short sell a security in the com.atp.com.atp.portfolio */
 
-		if(buyOrSell == TradeType.SELL_SHORT && 
-				portfolio.numPositions()>=tradingScheme.getNumberOfConcurrentPositions() && trade.getAction()== TradeAction.TO_OPEN)
+		if(buyOrSell == Type.SELL_SHORT &&
+				portfolio.numPositions()>=tradingScheme.getNumberOfConcurrentPositions() && trade.getAction()== Action.TO_OPEN)
 			return new TradeResult(NO_MORE_POSITIONS_ALLOWED,0.0);
 
 		
@@ -106,14 +106,14 @@ public class TradeManager {
 
 
 
-		if((buyOrSell == TradeType.BUY || buyOrSell == TradeType.SELL_SHORT) && trade.getAction() == TradeAction.TO_OPEN) {
+		if((buyOrSell == Trade.Type.BUY || buyOrSell == Trade.Type.SELL_SHORT) && trade.getAction() == Action.TO_OPEN) {
 			portfolio.addToPosition(trade);
 			tradeValue = trade.getTradeCost()-commission;
 		}
 
 		
 
-		if(buyOrSell == TradeType.SELL && trade.getAction() == TradeAction.TO_CLOSE) {
+		if(buyOrSell == Type.SELL && trade.getAction() == Action.TO_CLOSE) {
 			if(portfolio.getPosition(trade.getId())==null) {
 				return new TradeResult(NO_POSITION_TO_CLOSE,0.0);
 			}
@@ -129,14 +129,14 @@ public class TradeManager {
 		}
 		
 		
-		if(buyOrSell == TradeType.SELL_SHORT && trade.getAction() == TradeAction.TO_OPEN) {
+		if(buyOrSell == Type.SELL_SHORT && trade.getAction() == Action.TO_OPEN) {
 			portfolio.addToPosition(trade);
 			tradeValue = trade.getTradeCost()-commission;
 			totalCommissionsPaid =+ commission;
 		}
 
 
-		if(buyOrSell == TradeType.SELL && trade.getAction() == TradeAction.TO_CLOSE) {
+		if(buyOrSell == Trade.Type.SELL && trade.getAction() == Action.TO_CLOSE) {
 			//Just find first
 			if(portfolio.getPositionsWithSymbol(trade.getSecurity().getSymbol()).size() < 1) {
 				return new TradeResult(NO_POSITION_TO_CLOSE,0.0);
@@ -159,7 +159,7 @@ public class TradeManager {
 
 		if(PropertiesUtil.verbose) 
 			System.out.println(counter++ + " " + executeDateStr+ 
-					" " + trade.getId() + " " + 
+					" " + trade.getId() + " " +
 					trade.getAmount() + " " + trade.getAction().getTag() + " " + trade.getTradeType().getTag() + " @ " + 
 					FormatUtil.currency(trade.getSecurity().getBookCost()) + "/" + 
 					" [" + FormatUtil.currency(tradeValue) + "] -- Portfolio cash {" + FormatUtil.currency(portfolio.getCash()) + "}");
@@ -189,12 +189,12 @@ public class TradeManager {
 				if(priceBar.getHigh()>=position.getTakeProfitPrice()) {
 					Trade t = position.getCloseOutTrade();
 
-					t.setStatus(TradeStatus.CLOSED);
+					t.setStatus(Status.CLOSED);
 					execute(t, priceBar.getDateTime());
 				}
 				else if(priceBar.getLow()<=position.getStopLossPrice()) {
 					Trade trade = position.getCloseOutTrade();
-					trade.setStatus(TradeStatus.CLOSED);
+					trade.setStatus(Status.CLOSED);
 					execute(trade, priceBar.getDateTime());
 				}
 
@@ -208,13 +208,13 @@ public class TradeManager {
 				//	System.err.println(position.getTrade().getId());
 
 				//	System.err.println(t.getId());
-					trade.setStatus(TradeStatus.CLOSED);
+					trade.setStatus(Status.CLOSED);
 					execute(trade, priceBar.getDateTime());
 				}
 				else if(priceBar.getHigh()>=position.getStopLossPrice()) {
 				//	System.out.println("stop loss");
 					Trade trade = position.getCloseOutTrade();
-					trade.setStatus(TradeStatus.CLOSED);
+					trade.setStatus(Status.CLOSED);
 					execute(trade, priceBar.getDateTime());
 				}
 
@@ -230,10 +230,10 @@ public class TradeManager {
 
 	public void summary() {
 
-		int allTrades = getTrades(TradeStatus.ANY);
-		int allExitTrades = getTrades(TradeAction.TAKE_PROFIT)+getTrades(TradeAction.STOP_LOSS) ;
-		int tpTrades = getTrades(TradeAction.TAKE_PROFIT);
-		int slTrades = getTrades(TradeAction.STOP_LOSS);
+		int allTrades = getTrades(Status.ANY);
+		int allExitTrades = getTrades(Action.TAKE_PROFIT)+getTrades(Action.STOP_LOSS) ;
+		int tpTrades = getTrades(Action.TAKE_PROFIT);
+		int slTrades = getTrades(Action.STOP_LOSS);
 
 		if(PropertiesUtil.verbose) System.out.println("---- Summary -----");
 		if(PropertiesUtil.verbose) System.out.println("T - P - S ");
@@ -248,14 +248,14 @@ public class TradeManager {
 
 
 	public int getNumTrades() {
-		return getTrades(TradeStatus.ANY);
+		return getTrades(Status.ANY);
 	}
 
 
-	public int getTrades(TradeAction tradeAction) {
+	public int getTrades(Action tradeAction) {
 		int numberOfTrades = 0;
 
-		if(tradeAction == TradeAction.ANY)
+		if(tradeAction == Action.ANY)
 			return trades.size();
 
 		for(Trade t : trades)
@@ -264,10 +264,10 @@ public class TradeManager {
 		return numberOfTrades;
 	}
 	
-	public int getTrades(TradeStatus tradeStatus) {
+	public int getTrades(Status tradeStatus) {
 		int numberOfTrades = 0;
 
-		if(tradeStatus == TradeStatus.ANY)
+		if(tradeStatus == Status.ANY)
 			return trades.size();
 
 		for(Trade trade : trades)

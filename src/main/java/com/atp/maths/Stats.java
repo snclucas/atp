@@ -159,7 +159,7 @@ public class Stats {
 	}
 
 	public static double cumNormal(double mean, double sd, double value) {
-		NormalDistribution n = DistributionFactory.newInstance().createNormalDistribution(mean, sd);
+		NormalDistribution n = new NormalDistribution(mean, sd);
 		try {
 			return n.cumulativeProbability(value);
 		}
@@ -170,7 +170,7 @@ public class Stats {
 	}
 
 	public static double invNormal(double mean, double sd, double value) {
-		NormalDistribution n = DistributionFactory.newInstance().createNormalDistribution(mean, sd);
+		NormalDistribution n = new NormalDistribution(mean, sd);
 		try {
 			return n.inverseCumulativeProbability(value);
 		}
