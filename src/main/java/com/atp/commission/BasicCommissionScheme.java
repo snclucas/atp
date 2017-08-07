@@ -1,7 +1,7 @@
 package com.atp.commission;
 
 import com.atp.trade.TradeSetup;
-import com.atp.trade.Trade.Type;
+import com.atp.trade.TradeType;
 
 public class BasicCommissionScheme implements CommissionScheme {
 
@@ -30,7 +30,7 @@ public class BasicCommissionScheme implements CommissionScheme {
 
 	@Override
 	public double getCommission(TradeSetup tradeSetup) {
-		if(Type.BUY.equals(tradeSetup.getTradeType().getTag()))
+		if(TradeType.BUY.equals(tradeSetup.getTradeType().getTag()))
 			return getBuyCommission();
 		return getSellCommission();
 	}

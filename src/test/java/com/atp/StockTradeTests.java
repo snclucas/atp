@@ -7,15 +7,8 @@ import com.atp.data.PriceBar;
 import com.atp.portfolio.Portfolio;
 import com.atp.portfolio.Position;
 import com.atp.securities.Security;
-import com.atp.securities.SecurityFactory;
 import com.atp.securities.Stock;
-import com.atp.trade.Trade;
-import com.atp.trade.Trade.Action;
-import com.atp.trade.Trade.Type;
-import com.atp.trade.TradeManager;
-import com.atp.trade.TradeResult;
-import com.atp.trade.TradeSetup;
-import com.atp.trade.TradingScheme;
+import com.atp.trade.*;
 
 import junit.framework.TestCase;
 
@@ -37,7 +30,7 @@ public class StockTradeTests extends TestCase {
 
 	protected void setUp() {
 		portfolio = new Portfolio("Test portfolio", initialCash);
-		tradingScheme = new TradingScheme(stopLoss, takeProfit, 0.02,1,commissionScheme, false);
+		tradingScheme = new TradingScheme(stopLoss, takeProfit, 0.02,1,commissionScheme, true);
 		tm = new TradeManager(tradingScheme, portfolio);
 		
 		priceBar = new PriceBar("Test",tradeDate, 34,54,22,67,100000);
@@ -50,28 +43,49 @@ public class StockTradeTests extends TestCase {
 		TradeResult tradeResult;
 		
 		double tradeAmount = 100.0;
-		TradeSetup tradeSetup = new TradeSetup(tradeAmount, Type.BUY, Action.TO_OPEN);
+		TradeSetup tradeSetup = new TradeSetup(tradeAmount, TradeType.BUY, TradeAction.TO_OPEN, tradingScheme.getTakeProfit(), tradingScheme.getStopLoss());
 
+    PriceBar buyPriceBar = new PriceBar("Test", tradeDate, 100,100,100, 100,100000);
 		Security security = new Stock("msft", 100.0);
-		trade = new Trade(security, tradeSetup, tradingScheme.getStopLoss(),
-						tradingScheme.getTakeProfit(), java.time.LocalDateTime.now());
 
-		tradeResult = tm.execute(trade, tradeDate);
-		assertEquals( TradeManager.SUCCSESFUL_TRADE, tradeResult.getStatus());
+		trade = new Trade(security, buyPriceBar, tradeSetup);
+
+		tradeResult = tm.execute(trade);
+
+		assertEquals( TradeResultStatus.SUCCSESFUL_TRADE, tradeResult.getStatus());
+    assertEquals(TradeType.BUY, trade.getTradeType());
+    assertEquals(TradeAction.TO_OPEN, trade.getAction());
+    assertEquals(tradeAmount, trade.getAmount());
+    assertEquals(TradeStatus.ACTIVE, trade.getStatus());
+
+    // Try to buy more with no cash
+    tradeResult = tm.execute(trade);
+    assertEquals( TradeResultStatus.NOT_ENOUGH_CAPITAL, tradeResult.getStatus());
+
+
+
+
 
 		Position position = tm.getPortfolio().getPosition(security.getSecurityId());
-		
-		Trade closeTrade = position.getCloseOutTrade();
-		assertEquals(Type.SELL, closeTrade.getTradeType());
-		assertEquals(Action.TO_CLOSE, closeTrade.getAction());
-		assertEquals(tradeAmount*-1,closeTrade.getAmount());
-//		assertEquals(tradingScheme.getStopLoss(),position.getStopLossPrice());
-//		assertEquals(tradingScheme.getTakeProfit(),position.getTakeProfitPrice());
-//
-//
-//		trade = new Trade("Test2", Trade.Type.SELL, Trade.SHORT, Trade.ENTRY, tradeDate,100,1, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
-//		tradeResult = tm.execute(trade, tradeDate);
-//		assertEquals( TradeManager.SUCCSESFUL_TRADE, tradeResult.getStatus());
+
+    PriceBar sellPriceBar = new PriceBar("Test", tradeDate, 100,100,100, 120,100000);
+		Trade closeTrade = position.getCloseOutTrade(sellPriceBar);
+
+		tradeResult = tm.execute(closeTrade);
+    assertEquals( TradeResultStatus.SUCCSESFUL_TRADE, tradeResult.getStatus());
+
+		assertEquals(TradeType.SELL, closeTrade.getTradeType());
+		assertEquals(TradeAction.TO_CLOSE, closeTrade.getAction());
+		assertEquals(tradeAmount, closeTrade.getAmount());
+		assertEquals(tradingScheme.getStopLoss(), position.getStopLossPrice());
+		assertEquals(tradingScheme.getTakeProfit(), position.getTakeProfitPrice());
+
+
+    tradeSetup = new TradeSetup(tradeAmount, TradeType.SELL, TradeAction.TO_OPEN, tradingScheme.getTakeProfit(), tradingScheme.getStopLoss());
+		trade = new Trade(security, buyPriceBar, tradeSetup);
+
+		tradeResult = tm.execute(trade);
+		assertEquals( TradeResultStatus.SUCCSESFUL_TRADE, tradeResult.getStatus());
 //
 //		Trade closeTrade2 = tm.getPortfolio().getPosition(trade.getId()).getCloseOutTrade(priceBar, true, Trade.TAKE_PROFIT);
 //		assertEquals(Type.BUY,closeTrade2.getTradeType());
@@ -198,12 +212,12 @@ public class StockTradeTests extends TestCase {
 //
 //		TradeResult tradeResult;
 //
-//		double price = 10.0;
+//		double priceBar = 10.0;
 //		int numShares = 10;
 //
 //		double expectPortfolioCash = 0;
 //
-//		Trade trade1 = new Trade("Test", Type.SELL, Trade.SHORT, Trade.ENTRY, tradeDate,price,numShares, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
+//		Trade trade1 = new Trade("Test", Type.SELL, Trade.SHORT, Trade.ENTRY, tradeDate,priceBar,numShares, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
 //		tradeResult = tm.execute(trade1, tradeDate);
 //
 //		assertEquals(TradeManager.SUCCSESFUL_TRADE, tradeResult.getStatus());
@@ -216,27 +230,27 @@ public class StockTradeTests extends TestCase {
 //		System.err.println("Starting testTradeLong");
 //		TradeResult tradeResult;
 //
-//		double price = 10.0;
+//		double priceBar = 10.0;
 //		int numShares = 10;
 //
 //		double expectPortfolioCash = 0;
 //
-//		Trade trade1 = new Trade("Test", Trade.Type.BUY, Trade.LONG, Trade.ENTRY, tradeDate,price,numShares, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
+//		Trade trade1 = new Trade("Test", Trade.Type.BUY, Trade.LONG, Trade.ENTRY, tradeDate,priceBar,numShares, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
 //		tradeResult = tm.execute(trade1, tradeDate);
 //
 //		assertEquals(tradeResult.getStatus(), TradeManager.SUCCSESFUL_TRADE);
 //
-//		expectPortfolioCash = initialCash - (price*numShares) - buyCommission;
+//		expectPortfolioCash = initialCash - (priceBar*numShares) - buyCommission;
 //		assertEquals(expectPortfolioCash,portfolio.getCash());
 //
 //		//Try to add another position, this should fail
-//		Trade trade2 = new Trade("Test", Trade.Type.BUY, Trade.LONG, Trade.ENTRY, tradeDate2,price,numShares, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
+//		Trade trade2 = new Trade("Test", Trade.Type.BUY, Trade.LONG, Trade.ENTRY, tradeDate2,priceBar,numShares, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
 //		tradeResult = tm.execute(trade2, tradeDate);
 //		assertEquals(tradeResult.getStatus(), TradeManager.NO_MORE_POSITIONS_ALLOWED);
 //
 //
 //		//Lets try to sell a stock we dont have
-//		Trade trade3 = new Trade("Test2", Type.SELL, Trade.LONG, Trade.EXIT, new LocalDateTime(),price,numShares, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
+//		Trade trade3 = new Trade("Test2", Type.SELL, Trade.LONG, Trade.EXIT, new LocalDateTime(),priceBar,numShares, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit());
 //		tradeResult = tm.execute(trade3, tradeDate);
 //		//Check for correct status
 //		assertEquals(TradeManager.NO_POSITION_TO_CLOSE, tradeResult.getStatus());
@@ -245,8 +259,8 @@ public class StockTradeTests extends TestCase {
 //
 //
 //		//Sell the stock
-//		price = 11;
-//		//trade = new Trade("Test", Type.SELL, Trade.LONG, Trade.EXIT, tradeDate,price,numShares, ts.getStopLoss(), ts.getTakeProfit());
+//		priceBar = 11;
+//		//trade = new Trade("Test", Type.SELL, Trade.LONG, Trade.EXIT, tradeDate,priceBar,numShares, ts.getStopLoss(), ts.getTakeProfit());
 //
 //		Trade trade4 = portfolio.getPosition(trade1.getId()).getCloseOutTrade(priceBar, true, Trade.TAKE_PROFIT);
 //

@@ -2,20 +2,20 @@ package com.atp.trade;
 
 public class TradeResult {
 	
-	private int status;
+	private TradeResultStatus status;
 	private double tradeValue;
 	
-	public TradeResult(int status, double tradeValue) {
+	public TradeResult(TradeResultStatus status, double tradeValue) {
 		super();
 		this.status = status;
 		this.tradeValue = tradeValue;
 	}
 
-	public int getStatus() {
+	public TradeResultStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(int status) {
+	public void setStatus(TradeResultStatus status) {
 		this.status = status;
 	}
 

@@ -63,7 +63,7 @@ public class IndUtil {
             ssma += range[barIdx + i];
             rval[i] = (float)(ssma / length);
 
-            ssma -= range[barIdx + i + length]; // substract the oldest price
+            ssma -= range[barIdx + i + length]; // substract the oldest priceBar
         }
         
         return rval;

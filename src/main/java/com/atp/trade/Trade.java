@@ -4,77 +4,33 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.atp.UniquelyIdentifiable;
+import com.atp.data.PriceBar;
 import com.atp.securities.Security;
 
 public class Trade implements UniquelyIdentifiable {
 
-	public enum Type {
-		BUY("Buy", -1), SELL("Sell", 1), SELL_SHORT("Sell short", 1); // Buying costs you money therefore -1
-
-		private String tag;
-		private int value;
-
-		Type(String tag, int value) {
-			this.tag = tag; this.value = value; 
-		} 
-
-		public String getTag() { 
-			return tag; 
-		}
-
-		public int getValue() { 
-			return value; 
-		}
-
-	};
-
-
-	public enum Action {
-		TO_OPEN("To open"), TO_CLOSE("To close"), STOP_LOSS("Stop loss"), TAKE_PROFIT("Take profit"), HOLDING_PERIOD("Holding period"), ANY("Any");
-		private String tag;
-		Action(String tag) { this.tag = tag;}
-		public String getTag() { return tag; }
-	};
-
-
-	public enum Status {
-		ACTIVE("Active"), SUCCESSFULL("Successful"), INACTIVE("Inactive"), CLOSED("Closed"), ANY("Any");
-		private String tag;
-		Status(String tag) { this.tag = tag;}
-		public String getTag() { return tag; }
-	};
-
-
 	private Security security;
 	private TradeSetup tradeSetup;
-	private Status status;
-	private LocalDateTime dateTime;
+	private TradeStatus status;
 	private boolean active;
-	protected double tradeValue;
+	protected PriceBar priceBar;
 	private String id;
 
-	private double takeProfitPrice;
-  private double stopLossPrice;
 
-
-	public Trade(Security security, TradeSetup tradeSetup, double takeProfitPrice, double stopLossPrice, LocalDateTime dateTime){
+	public Trade(Security security, PriceBar priceBar, TradeSetup tradeSetup){
 		this.security = security;
 		this.tradeSetup = tradeSetup;
-		this.dateTime = dateTime;
-		this.status = Status.INACTIVE;
-		this.takeProfitPrice = takeProfitPrice;
-		this.stopLossPrice = stopLossPrice;
+		this.status = TradeStatus.INACTIVE;
 		this.id = UUID.randomUUID().toString();
+		this.priceBar = priceBar;
 	}
 
-
-  public double getTakeProfitPrice() {
-    return takeProfitPrice;
+  public double getPrice() {
+    return priceBar.getPrice(PriceBar.Price.CLOSE);
   }
 
-
-  public double getStopLossPrice() {
-    return stopLossPrice;
+  public void setPriceBar(PriceBar price) {
+    this.priceBar = priceBar;
   }
 
 
@@ -83,8 +39,8 @@ public class Trade implements UniquelyIdentifiable {
 	}
 
 
-	public double getTradeCost() {
-		return getAmount() * security.getBookCost() * tradeSetup.getTradeType().getValue();
+	public double getTradeCost(double price) {
+		return getAmount() * price * tradeSetup.getTradeType().getValue();
 	}
 
 
@@ -103,22 +59,22 @@ public class Trade implements UniquelyIdentifiable {
 	}
 
 
-	public Status getStatus() {
+	public TradeStatus getStatus() {
 		return status;
 	}
 
 
-	public void setStatus(Status status) {
+	public void setStatus(TradeStatus status) {
 		this.status = status;
 	}
 
 
 	public LocalDateTime getDate() {
-		return dateTime;
+		return priceBar.getDateTime();
 	}
 
 
-	public Action getAction() {
+	public TradeAction getAction() {
 		return tradeSetup.getTradeAction();
 	}
 
@@ -128,7 +84,7 @@ public class Trade implements UniquelyIdentifiable {
 
 	// Delegate methods
 
-	public Type getTradeType() {
+	public TradeType getTradeType() {
 		return tradeSetup.getTradeType();
 	}
 

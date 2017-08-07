@@ -11,8 +11,9 @@ import com.atp.logging.Message;
 import com.atp.logging.Message.MessageType;
 import com.atp.securities.Security;
 import com.atp.trade.Trade;
-import com.atp.trade.Trade.Action;
+import com.atp.trade.TradeAction;
 import com.atp.trade.TradeSetup;
+import com.atp.trade.TradeType;
 
 
 public class Position implements UniquelyIdentifiable {
@@ -56,6 +57,8 @@ public class Position implements UniquelyIdentifiable {
 					this.security.getType() + " / " + security.getSymbol() + "  position");
 		}
 		trades.add(trade);
+		this.setTakeProfitPrice(trade.getTradeSetup().getTakeProfitPrice());
+    this.setStopLossPrice(trade.getTradeSetup().getStopLossPrice());
 		this.amount += trade.getAmount() * trade.getTradeType().getValue(); // Add to amount if BUY, subtract id SELL
 		
 		return new Message(MessageType.SUCCESS, LocalDateTime.now(), "Added " + 
@@ -115,13 +118,13 @@ public class Position implements UniquelyIdentifiable {
 	}
 
 
-	public Trade getCloseOutTrade() {
+	public Trade getCloseOutTrade(PriceBar priceBar) {
 	  TradeSetup tradeSetup;
-	  if(amount > 0)
-      tradeSetup = new TradeSetup(amount, Trade.Type.BUY, Action.TO_CLOSE);
+	  if(amount < 0)
+      tradeSetup = new TradeSetup(amount, TradeType.BUY, TradeAction.TO_CLOSE, -1, -1);
 	  else
-      tradeSetup = new TradeSetup(amount, Trade.Type.SELL, Action.TO_CLOSE);
-	  return new Trade(getSecurity(),tradeSetup, -1, -1,  LocalDateTime.now());
+      tradeSetup = new TradeSetup(amount, TradeType.SELL, TradeAction.TO_CLOSE, -1, -1);
+	  return new Trade(getSecurity(), priceBar, tradeSetup);
   }
 
 

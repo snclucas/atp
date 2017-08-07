@@ -27,7 +27,7 @@ public class Portfolio implements MessageWriter {
 
 	public Portfolio(String name, double initialCash) {
 		this.name = name;
-		positions = new HashMap<String, Position>();
+		positions = new HashMap<>();
 		this.cash = initialCash;
 		this.initialCash = initialCash;
 		this.cashPerTrade = 0;
@@ -36,7 +36,7 @@ public class Portfolio implements MessageWriter {
 
 	public Portfolio(String name, double initialCash, int allowedTrades, double cashPerTrade) {
 		this.name = name;
-		positions = new HashMap<String, Position>();
+		positions = new HashMap<>();
 		this.cash = initialCash;
 		this.initialCash = initialCash;
 		this.cashPerTrade = cashPerTrade;
@@ -146,34 +146,21 @@ public class Portfolio implements MessageWriter {
 	
 	
 	public Message addTrade(Trade trade) {
-		double costOfTrade = trade.getTradeCost();
-		for(Position position : positions.values()) {
-			if(position.getSecurity().equals(trade.getSecurity())) {
-				 position.addTrade(trade);
-				 cash += costOfTrade;
-				 return new Message(MessageType.SUCCESS, LocalDateTime.now(), 
-						 "Trade added to exisiting position [" + position.getId() + "]");
-			}
-		}
-		
-		// We don't have a position in this security so create a new position
-		Position position = new Position(trade);
-		positions.put(position.getId(), position);
-		cash += costOfTrade;
-		return new Message(MessageType.SUCCESS, LocalDateTime.now(), 
-				 "Trade added to new position [" + position.getId() + "]");
-	}
-	
-	
-	public void addToPosition(Trade trade) {
-		if(!positions.containsKey(trade.getSecurity().getSecurityId())) {
-			positions.put(trade.getSecurity().getSecurityId(), new Position(trade));
-		}
-		else {
-			Position position = positions.get(trade.getSecurity().getSecurityId());
-			position.addTrade(trade);
-			//Does this update the position in the map?
-		}
+
+    if(!positions.containsKey(trade.getSecurity().getSecurityId())) {
+      Position position = new Position(trade);
+      positions.put(trade.getSecurity().getSecurityId(), position);
+      cash -= trade.getTradeCost(trade.getPrice());
+      return new Message(MessageType.SUCCESS, LocalDateTime.now(),
+              "Trade added to existing position [" + position.getId() + "]");
+    }
+    else {
+      Position position = positions.get(trade.getSecurity().getSecurityId());
+      position.addTrade(trade);
+      cash -= trade.getTradeCost(trade.getPrice());
+      return new Message(MessageType.SUCCESS, LocalDateTime.now(),
+              "Trade added to new position [" + position.getId() + "]");
+    }
 	}
 
 	

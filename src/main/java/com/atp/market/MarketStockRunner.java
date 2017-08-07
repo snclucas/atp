@@ -12,12 +12,7 @@ import com.atp.portfolio.Portfolio;
 import com.atp.securities.Stock;
 import com.atp.strategy.BollingerMedianStrategy;
 import com.atp.strategy.Strategy;
-import com.atp.trade.Trade;
-import com.atp.trade.TradeManager;
-import com.atp.trade.TradeResult;
-import com.atp.trade.TradeSetup;
-import com.atp.trade.TradingScheme;
-import com.atp.trade.Trade.Action;
+import com.atp.trade.*;
 
 public class MarketStockRunner {
 
@@ -76,14 +71,14 @@ public class MarketStockRunner {
 						
 						int numShares = (int)((portfolio.getCash()*tradeManager.getTradingScheme().getMaxCapitalPerTrade()) / close);
 
-						TradeSetup tradeSetup = new TradeSetup(numShares, Trade.Type.BUY, Action.TO_OPEN);
+						TradeSetup tradeSetup = new TradeSetup(numShares, TradeType.BUY, TradeAction.TO_OPEN, tradingScheme.getTakeProfit(), tradingScheme.getStopLoss());
 
-						Trade trade = new Trade(new Stock(qh.getSymbol(), close),  tradeSetup, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit(), date);
+						Trade trade = new Trade(new Stock(qh.getSymbol(), close), currentBar, tradeSetup);
 
-						TradeResult result = tradeManager.execute(trade, date);
+						TradeResult result = tradeManager.execute(trade);
 						
-						if(result.getStatus()!=TradeManager.SUCCSESFUL_TRADE)
-							System.err.println("Error code " + TradeManager.getStatusString(result.getStatus()));
+						if(result.getStatus() != TradeResultStatus.SUCCSESFUL_TRADE)
+							System.err.println("Error code " + TradeResultStatus.SUCCSESFUL_TRADE);
 
 					}
 				}
@@ -92,14 +87,14 @@ public class MarketStockRunner {
 
 						int numShares = (int)((portfolio.getCash()*tradeManager.getTradingScheme().getMaxCapitalPerTrade()) / close);
 
-						TradeSetup tradeSetup = new TradeSetup(numShares, Trade.Type.SELL, Action.TO_OPEN);
+						TradeSetup tradeSetup = new TradeSetup(numShares, TradeType.SELL, TradeAction.TO_OPEN, tradingScheme.getTakeProfit(), tradingScheme.getStopLoss());
 
-						Trade trade = new Trade(new Stock(qh.getSymbol(), close), tradeSetup, tradingScheme.getStopLoss(), tradingScheme.getTakeProfit(), date);
+						Trade trade = new Trade(new Stock(qh.getSymbol(), close), currentBar, tradeSetup);
 
-						TradeResult result = tradeManager.execute(trade, date);
+						TradeResult result = tradeManager.execute(trade);
 						
-						if(result.getStatus()!=TradeManager.SUCCSESFUL_TRADE)
-							System.err.println("Error code " + TradeManager.getStatusString(result.getStatus()));
+						if(result.getStatus() != TradeResultStatus.SUCCSESFUL_TRADE)
+							System.err.println("Error code " + result.getStatus());
 					}
 				}
 

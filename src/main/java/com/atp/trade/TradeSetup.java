@@ -1,28 +1,29 @@
 package com.atp.trade;
 
-import com.atp.trade.Trade.Action;
-import com.atp.trade.Trade.Type;
-
 public class TradeSetup {
 	
-	private Trade.Type tradeType;
-	private Action tradeAction;
+	private TradeType tradeType;
+	private TradeAction tradeAction;
 	private double amount;
+	private double takeProfitPrice;
+	private double stopLossPrice;
 	
-	public TradeSetup(double amount, Type tradeType, Action tradeAction) {
+	public TradeSetup(double amount, TradeType tradeType, TradeAction tradeAction, double takeProfitPrice, double stopLossPrice) {
 		super();
 		this.tradeType = tradeType;
 		this.tradeAction = tradeAction;
 		this.amount = amount;
+    this.takeProfitPrice = takeProfitPrice;
+    this.stopLossPrice = stopLossPrice;
 	}
 
 
-	public Trade.Type getTradeType() {
+	public TradeType getTradeType() {
 		return tradeType;
 	}
 
 
-	public Action getTradeAction() {
+	public TradeAction getTradeAction() {
 		return tradeAction;
 	}
 
@@ -30,5 +31,14 @@ public class TradeSetup {
 	public double getAmount() {
 		return amount;
 	}
+
+  public double getTakeProfitPrice() {
+    return takeProfitPrice;
+  }
+
+
+  public double getStopLossPrice() {
+    return stopLossPrice;
+  }
 	
 }

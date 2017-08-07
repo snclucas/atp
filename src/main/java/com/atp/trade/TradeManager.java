@@ -1,66 +1,26 @@
 package com.atp.trade;
 
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import com.atp.data.PriceBar;
 import com.atp.portfolio.Portfolio;
 import com.atp.portfolio.Position;
-import com.atp.trade.Trade.Action;
-import com.atp.trade.Trade.Status;
-import com.atp.trade.Trade.Type;
 import com.atp.util.FormatUtil;
 import com.atp.util.PropertiesUtil;
 
 
+
 public class TradeManager {
 
-	int counter = 0;
-
-	public final static int SUCCSESFUL_TRADE = 0;
-	public final static int NO_POSITION_TO_CLOSE = -3;
-	public final static int NOT_ENOUGH_CAPITAL = -2;
-	public final static int NO_MORE_POSITIONS_ALLOWED = -1;
-	public final static int CANNOT_SATISFY_TRADE_RULE = -5;
-	public final static int INVALID_TRADE = -6;
-
+	private int counter = 0;
 
 	private TradingScheme tradingScheme;
 	private Portfolio portfolio;
 	private List<Trade> trades;
-	private double tradeValue;
+
 	private double totalCommissionsPaid;
 
-
-
-
-	public static String getStatusString(int status) {
-		String returnString;
-		switch (status) {
-		case SUCCSESFUL_TRADE:
-			returnString = "SUCCESSFUL";
-			break;
-		case NO_POSITION_TO_CLOSE: 
-			returnString = "NO_POSITION_TO_CLOSE";
-			break;
-		case NOT_ENOUGH_CAPITAL:
-			returnString = "NOT_ENOUGH_CAPITAL";
-			break;
-		case NO_MORE_POSITIONS_ALLOWED:
-			returnString = "NO_MORE_POSITIONS_ALLOWED";
-			break;
-		case CANNOT_SATISFY_TRADE_RULE:         //  Cases can simply fall thru.
-			returnString = "CANNOT_SATISFY_TRADE_RULE";
-			break;
-		case INVALID_TRADE:         //  Cases can simply fall thru.
-			returnString = "IVALID_TRADE";
-			break;
-		default:
-			returnString = "ERROR";
-		}
-		return returnString;
-	}
 
 
 
@@ -77,85 +37,60 @@ public class TradeManager {
 	}
 
 
-	public TradeResult execute(Trade trade, LocalDateTime executeDate) {
-		String executeDateStr = FormatUtil.shortDate(executeDate);
-		Type buyOrSell = trade.getTradeType();
+	public TradeResult execute(Trade trade) {
+		double tradeValue = 0.0;
+		String executeDateStr = FormatUtil.shortDate(trade.getDate());
+		TradeType buyOrSell = trade.getTradeType();
 
 		double commission = tradingScheme.getCommission(trade.getTradeSetup());
 
 		if(trade.getAmount()<1)
-			return new TradeResult(CANNOT_SATISFY_TRADE_RULE, 0.0);
-
-		/* Buy a security */
-		if(buyOrSell == Type.BUY &&
-				portfolio.numPositions()>=tradingScheme.getNumberOfConcurrentPositions() && 
-				trade.getAction() == Action.TO_OPEN) //change this - this could be closing out a short
-			return new TradeResult(NO_MORE_POSITIONS_ALLOWED,0.0);
-		
-		/* Short sell a security in the com.atp.com.atp.portfolio */
-
-		if(buyOrSell == Type.SELL_SHORT &&
-				portfolio.numPositions()>=tradingScheme.getNumberOfConcurrentPositions() && trade.getAction()== Action.TO_OPEN)
-			return new TradeResult(NO_MORE_POSITIONS_ALLOWED,0.0);
-
-		
-		double portfolioCash = portfolio.getCash();
-
-		if(portfolioCash<(tradeValue))
-			return new TradeResult(NOT_ENOUGH_CAPITAL,0.0);
+			return new TradeResult(TradeResultStatus.CANNOT_SATISFY_TRADE_RULE, 0.0);
 
 
-
-		if((buyOrSell == Trade.Type.BUY || buyOrSell == Trade.Type.SELL_SHORT) && trade.getAction() == Action.TO_OPEN) {
-			portfolio.addToPosition(trade);
-			tradeValue = trade.getTradeCost()-commission;
-		}
-
-		
-
-		if(buyOrSell == Type.SELL && trade.getAction() == Action.TO_CLOSE) {
-			if(portfolio.getPosition(trade.getId())==null) {
-				return new TradeResult(NO_POSITION_TO_CLOSE,0.0);
-			}
-
-			boolean removed = portfolio.removePosition(trade.getId());
-			if(!removed) {
-				System.err.println("No position removed!");
-			}
-			else {
-				tradeValue = trade.getTradeCost()-commission;
-				totalCommissionsPaid =+ commission;
-			}
-		}
-		
-		
-		if(buyOrSell == Type.SELL_SHORT && trade.getAction() == Action.TO_OPEN) {
-			portfolio.addToPosition(trade);
-			tradeValue = trade.getTradeCost()-commission;
-			totalCommissionsPaid =+ commission;
-		}
+		if((buyOrSell == TradeType.BUY || buyOrSell == TradeType.SELL) &&
+            trade.getAction() == TradeAction.TO_OPEN &&
+				portfolio.numPositions()>=tradingScheme.getNumberOfConcurrentPositions()) //change this - this could be closing out a short
+			return new TradeResult(TradeResultStatus.NO_MORE_POSITIONS_ALLOWED,0.0);
 
 
-		if(buyOrSell == Trade.Type.SELL && trade.getAction() == Action.TO_CLOSE) {
-			//Just find first
-			if(portfolio.getPositionsWithSymbol(trade.getSecurity().getSymbol()).size() < 1) {
-				return new TradeResult(NO_POSITION_TO_CLOSE,0.0);
-			}
+    if(buyOrSell == TradeType.SELL && trade.getAction() == TradeAction.TO_OPEN &&
+           !tradingScheme.allowShortSelling())
+      return new TradeResult(TradeResultStatus.NO_SHORT_SELLING,0.0);
 
-			boolean removed = portfolio.removePosition(trade.getId());
-			if(!removed) {
-				System.err.println("No position removed!");
-			}
-			else {
-				tradeValue = trade.getTradeCost() - commission;
-			}
-		}
+    tradeValue = trade.getTradeCost(trade.getPrice())-commission;
+
+		if(portfolio.getCash() < (tradeValue))
+			return new TradeResult(TradeResultStatus.NOT_ENOUGH_CAPITAL,0.0);
 
 
-		addTrade(trade);
+    if(trade.getAction() == TradeAction.TO_OPEN) {
+      trade.setStatus(TradeStatus.ACTIVE);
+      portfolio.addTrade(trade);
+      tradeValue = trade.getTradeCost(trade.getPrice())-commission;
+    }
+    else if(trade.getAction() == TradeAction.TO_CLOSE) {
+      if(portfolio.getPosition(trade.getSecurity().getSecurityId())==null) {
+        return new TradeResult(TradeResultStatus.NO_POSITION_TO_CLOSE,0.0);
+      }
+
+      boolean removed = portfolio.removePosition(trade.getSecurity().getSecurityId());
+      if(!removed) {
+        System.err.println("No position removed!");
+      }
+      else {
+        portfolio.addTrade(trade);
+        tradeValue = trade.getTradeCost(trade.getPrice())-commission;
+        totalCommissionsPaid =+ commission;
+      }
+    }
+
+
+
+		//addTrade(trade);
 
 		//tradeValue is negative for LONG BUY, SHORT SELL and positive for LONG SELL, SHORT BUYs
-		portfolio.setCash(portfolioCash+tradeValue);
+		//portfolio.setCash(portfolioCash+tradeValue);
 
 		if(PropertiesUtil.verbose) 
 			System.out.println(counter++ + " " + executeDateStr+ 
@@ -164,7 +99,7 @@ public class TradeManager {
 					FormatUtil.currency(trade.getSecurity().getBookCost()) + "/" + 
 					" [" + FormatUtil.currency(tradeValue) + "] -- Portfolio cash {" + FormatUtil.currency(portfolio.getCash()) + "}");
 
-		return new TradeResult(SUCCSESFUL_TRADE, tradeValue);
+		return new TradeResult(TradeResultStatus.SUCCSESFUL_TRADE, tradeValue);
 	}
 
 
@@ -178,8 +113,8 @@ public class TradeManager {
               priceBar.getDateTime());
 			
 			if(holdingPeriod >= tradingScheme.getMaxHoldingPeriod()) {
-        Trade trade = position.getCloseOutTrade();
-        execute(trade, priceBar.getDateTime());
+        Trade trade = position.getCloseOutTrade(priceBar);
+        execute(trade);
         return;
       }
 
@@ -187,15 +122,15 @@ public class TradeManager {
 			if(position.isLong()) {
 
 				if(priceBar.getHigh()>=position.getTakeProfitPrice()) {
-					Trade t = position.getCloseOutTrade();
+					Trade t = position.getCloseOutTrade(priceBar);
 
-					t.setStatus(Status.CLOSED);
-					execute(t, priceBar.getDateTime());
+					t.setStatus(TradeStatus.CLOSED);
+					execute(t);
 				}
 				else if(priceBar.getLow()<=position.getStopLossPrice()) {
-					Trade trade = position.getCloseOutTrade();
-					trade.setStatus(Status.CLOSED);
-					execute(trade, priceBar.getDateTime());
+					Trade trade = position.getCloseOutTrade(priceBar);
+					trade.setStatus(TradeStatus.CLOSED);
+					execute(trade);
 				}
 
 			}
@@ -204,36 +139,31 @@ public class TradeManager {
 				if(priceBar.getLow()<=position.getTakeProfitPrice()) {
 					//System.out.println("take profit");
 
-					Trade trade = position.getCloseOutTrade();
+					Trade trade = position.getCloseOutTrade(priceBar);
 				//	System.err.println(position.getTrade().getId());
 
 				//	System.err.println(t.getId());
-					trade.setStatus(Status.CLOSED);
-					execute(trade, priceBar.getDateTime());
+					trade.setStatus(TradeStatus.CLOSED);
+					execute(trade);
 				}
 				else if(priceBar.getHigh()>=position.getStopLossPrice()) {
 				//	System.out.println("stop loss");
-					Trade trade = position.getCloseOutTrade();
-					trade.setStatus(Status.CLOSED);
-					execute(trade, priceBar.getDateTime());
+					Trade trade = position.getCloseOutTrade(priceBar);
+					trade.setStatus(TradeStatus.CLOSED);
+					execute(trade);
 				}
-
 			}
-
-
 		}
-
-
-
 	}
+
 
 
 	public void summary() {
 
-		int allTrades = getTrades(Status.ANY);
-		int allExitTrades = getTrades(Action.TAKE_PROFIT)+getTrades(Action.STOP_LOSS) ;
-		int tpTrades = getTrades(Action.TAKE_PROFIT);
-		int slTrades = getTrades(Action.STOP_LOSS);
+		int allTrades = getTrades(TradeStatus.ANY);
+		int allExitTrades = getTrades(TradeAction.TAKE_PROFIT)+getTrades(TradeAction.STOP_LOSS) ;
+		int tpTrades = getTrades(TradeAction.TAKE_PROFIT);
+		int slTrades = getTrades(TradeAction.STOP_LOSS);
 
 		if(PropertiesUtil.verbose) System.out.println("---- Summary -----");
 		if(PropertiesUtil.verbose) System.out.println("T - P - S ");
@@ -248,14 +178,14 @@ public class TradeManager {
 
 
 	public int getNumTrades() {
-		return getTrades(Status.ANY);
+		return getTrades(TradeStatus.ANY);
 	}
 
 
-	public int getTrades(Action tradeAction) {
+	public int getTrades(TradeAction tradeAction) {
 		int numberOfTrades = 0;
 
-		if(tradeAction == Action.ANY)
+		if(tradeAction == TradeAction.ANY)
 			return trades.size();
 
 		for(Trade t : trades)
@@ -264,10 +194,10 @@ public class TradeManager {
 		return numberOfTrades;
 	}
 	
-	public int getTrades(Status tradeStatus) {
+	public int getTrades(TradeStatus tradeStatus) {
 		int numberOfTrades = 0;
 
-		if(tradeStatus == Status.ANY)
+		if(tradeStatus == TradeStatus.ANY)
 			return trades.size();
 
 		for(Trade trade : trades)
